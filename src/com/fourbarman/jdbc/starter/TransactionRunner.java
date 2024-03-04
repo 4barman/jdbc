@@ -3,39 +3,33 @@ package com.fourbarman.jdbc.starter;
 import com.fourbarman.jdbc.starter.util.ConnectionManager;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
 
 public class TransactionRunner {
     public static void main(String[] args) throws SQLException {
         Long flightId = 9L;
-        String deleteFlightSql = """
-                DELETE FROM flight where id = ?
-                """;
-        String deleteTicketsSql = """
-                DELETE FROM ticket where id = ?
-                """;
-        Connection connection = null;
-        PreparedStatement deleteFlightStatement = null;
-        PreparedStatement deleteTicketStatement = null;
+        String deleteFlightSql = "DELETE FROM flight where id = " + flightId;
+        String deleteTicketsSql = "DELETE FROM ticket where flight_id = " + flightId;
 
+        Connection connection = null;
+        Statement statement = null;
         try {
             connection = ConnectionManager.open();
-            deleteFlightStatement = connection.prepareStatement(deleteFlightSql);
-            deleteTicketStatement = connection.prepareStatement(deleteTicketsSql);
-
             connection.setAutoCommit(false);
-            deleteFlightStatement.setLong(1, flightId);
-            deleteTicketStatement.setLong(1, flightId);
+            statement = connection.createStatement();
 
-            deleteTicketStatement.executeUpdate();//if throw exception, flight will not be deleted
-            if (true) {
-                throw new RuntimeException("Ooops");
-            }
-            deleteFlightStatement.executeUpdate();
+            statement.addBatch(deleteTicketsSql);
+            statement.addBatch(deleteFlightSql);
+
+            //return [8, 1] where 8 - number of deleted ticket rows, 1 - number of deleted flight rows
+            int[] ints = statement.executeBatch();
+
+            System.out.println(Arrays.toString(ints));
 
             connection.commit();
-
+            connection.setAutoCommit(true);
         } catch (SQLException e) {
             if (connection != null) {
                 connection.rollback();
@@ -45,11 +39,8 @@ public class TransactionRunner {
             if (connection != null) {
                 connection.close();
             }
-            if (deleteFlightStatement != null) {
-                deleteFlightStatement.close();
-            }
-            if (deleteTicketStatement != null) {
-                deleteTicketStatement.close();
+            if (statement != null) {
+                statement.close();
             }
         }
     }
