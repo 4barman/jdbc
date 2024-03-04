@@ -13,12 +13,16 @@ public class JdbcRunner {
 //        Long flightId = 2L;
 //        List<Long> listByFlightId = getListByFlightId(flightId);
 //        System.out.println(listByFlightId);
-        System.out.println(getFlightsBetween(LocalDate.of(2020, 10, 1).atStartOfDay(), LocalDate.now().atStartOfDay()));
-        checkMetadata();
+//        System.out.println(getFlightsBetween(LocalDate.of(2020, 10, 1).atStartOfDay(), LocalDate.now().atStartOfDay()));
+        try{
+            checkMetadata();
+        } finally {
+            ConnectionManager.closePool();
+        }
     }
 
     private static void checkMetadata() throws SQLException {
-        try (Connection connection = ConnectionManager.open()) {
+        try (Connection connection = ConnectionManager.get()) {
             DatabaseMetaData metaData = connection.getMetaData();
             ResultSet catalogs = metaData.getCatalogs();
             //all databases
@@ -46,7 +50,7 @@ public class JdbcRunner {
                 WHERE departure_date BETWEEN ? AND ?;
                 """;
         List<Long> result = new ArrayList<>();
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = ConnectionManager.get();
         PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setFetchSize(50);
             preparedStatement.setQueryTimeout(10);
@@ -75,7 +79,7 @@ public class JdbcRunner {
                 WHERE flight_id = ?
                 """;
         List<Long> list = new ArrayList<>();
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = ConnectionManager.get();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setLong(1, flightId);
