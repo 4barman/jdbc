@@ -9,11 +9,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JdbcRunner {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 //        Long flightId = 2L;
 //        List<Long> listByFlightId = getListByFlightId(flightId);
 //        System.out.println(listByFlightId);
         System.out.println(getFlightsBetween(LocalDate.of(2020, 10, 1).atStartOfDay(), LocalDate.now().atStartOfDay()));
+        checkMetadata();
+    }
+
+    private static void checkMetadata() throws SQLException {
+        try (Connection connection = ConnectionManager.open()) {
+            DatabaseMetaData metaData = connection.getMetaData();
+            ResultSet catalogs = metaData.getCatalogs();
+            //all databases
+            while (catalogs.next()) {
+                System.out.println(catalogs.getString(1));
+                //current database schemas
+                ResultSet schemas = metaData.getSchemas();
+                while (schemas.next()) {
+                    System.out.println(schemas.getString("TABLE_SCHEM"));
+
+                    //table names. "%" means all.
+                    ResultSet tables = metaData.getTables(null, null, "%", null);
+                    while(tables.next()) {
+                        System.out.println(tables.getString("TABLE_NAME"));
+                    }
+                }
+            }
+        }
     }
 
     private static List<Long> getFlightsBetween(LocalDateTime start, LocalDateTime end) {
