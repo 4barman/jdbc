@@ -9,14 +9,13 @@ import java.sql.Statement;
 public class JdbcRunner {
     public static void main(String[] args) {
         String sql = """
-                    CREATE TABLE IF NOT EXISTS info(
-                    id SERIAL PRIMARY KEY ,
-                    data text NOT NULL );
+                    INSERT INTO info(data)
+                    VALUES ('test1'), ('test2'), ('test3'), ('test4');
                 """;
         try(Connection connection = ConnectionManager.open();
             Statement statement = connection.createStatement()) {
             System.out.println(connection.getTransactionIsolation());
-            boolean executeResult = statement.execute(sql);
+            int executeResult = statement.executeUpdate(sql);
             System.out.println(executeResult);
         } catch (SQLException e) {
             throw new RuntimeException(e);
