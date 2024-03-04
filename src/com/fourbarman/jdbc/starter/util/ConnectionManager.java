@@ -8,9 +8,9 @@ import java.sql.SQLException;
  * Utility class
  */
 public final class ConnectionManager {
-    private static final String PASSWORD = "postgres";
-    private static final String USER = "postgres";
-    private static final String URL = "jdbc:postgresql://localhost:5432/flight_repository";
+    private static final String PASSWORD_KEY = "db.password";
+    private static final String USER_KEY = "db.username";
+    private static final String URL_KEY = "db.url";
 
     /**
      * Before jdk 1.8 we have to load driver
@@ -33,7 +33,11 @@ public final class ConnectionManager {
 
     public static Connection open() {
         try {
-            return DriverManager.getConnection(URL, USER, PASSWORD);
+            return DriverManager.getConnection(
+                    PropertiesUtil.get(URL_KEY),
+                    PropertiesUtil.get(USER_KEY),
+                    PropertiesUtil.get(PASSWORD_KEY)
+            );
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
